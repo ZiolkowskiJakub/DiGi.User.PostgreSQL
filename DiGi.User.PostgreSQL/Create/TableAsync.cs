@@ -33,6 +33,7 @@ namespace DiGi.User.PostgreSQL
                     email TEXT NOT NULL UNIQUE,
                     first_name TEXT,
                     last_name TEXT,
+                    level INTEGER DEFAULT 0,
                     object JSONB,
                     created_at timestamptz DEFAULT now(),
                     updated_at timestamptz DEFAULT now()
