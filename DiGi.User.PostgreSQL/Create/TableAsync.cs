@@ -22,7 +22,7 @@ namespace DiGi.User.PostgreSQL
         /// <param name="npgsqlConnection">The <see cref="NpgsqlConnection"/> instance used to execute the command.</param>
         /// <param name="commandTimeout">The timeout in seconds for the execution of the command.</param>
         /// <param name="cancellationToken">The <see cref="CancellationToken"/> to monitor for cancellation requests.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result is true if the table was created successfully; otherwise, false.</returns>
+        /// <returns>A task that represents the asynchronous operation. The task result is true if the table was created or brought up to the current column set; false only when the connection is null. A statement-level failure - permissions, an object that collides with the DDL - propagates as an <see cref="NpgsqlException"/> rather than returning false, so the caller reports what actually failed instead of a bare false that names nothing.</returns>
         public static async Task<bool> TableAsync_User(this NpgsqlConnection? npgsqlConnection, int commandTimeout = 30, CancellationToken cancellationToken = default)
         {
             if (npgsqlConnection is null)
@@ -58,19 +58,15 @@ namespace DiGi.User.PostgreSQL
                 CREATE INDEX IF NOT EXISTS idx_{Constants.TableName.User}_last_name
                 ON {Constants.TableName.User} (last_name);";
 
-            try
-            {
-                // Explicitly using NpgsqlCommand type instead of implicit typing
-                await using NpgsqlCommand npgsqlCommand = new(commandText, npgsqlConnection);
-                npgsqlCommand.CommandTimeout = commandTimeout;
+            // No catch around the statement: a failure here is the reason the table is missing, and swallowing
+            // it used to turn a permission or DDL error into a bare false that named nothing. It propagates to
+            // the task that asked for the table, which carries it as its exception and shows it to the operator.
+            // Explicitly using NpgsqlCommand type instead of implicit typing
+            await using NpgsqlCommand npgsqlCommand = new(commandText, npgsqlConnection);
+            npgsqlCommand.CommandTimeout = commandTimeout;
 
-                await npgsqlCommand.ExecuteNonQueryAsync(cancellationToken);
-                return true;
-            }
-            catch (NpgsqlException)
-            {
-                return false;
-            }
+            await npgsqlCommand.ExecuteNonQueryAsync(cancellationToken);
+            return true;
         }
     }
 }

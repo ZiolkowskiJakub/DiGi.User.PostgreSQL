@@ -75,8 +75,13 @@ namespace DiGi.User.PostgreSQL.Classes
         public async Task<bool> CreateTableAsync(int commandTimeout = 30, CancellationToken cancellationToken = default)
         {
             // The database itself, not just the table: a connection to an absent database fails to open before any
-            // statement runs, so this is the only place a write path can bring one into existence.
-            await CreateDatabaseAsync();
+            // statement runs, so this is the only place a write path can bring one into existence. False means the
+            // connection data cannot address a server at all - a reachable server that refuses throws instead -
+            // and continuing would only move the failure to the connection open below, unnamed.
+            if (!await CreateDatabaseAsync())
+            {
+                return false;
+            }
 
             await using NpgsqlConnection? npgsqlConnection = DiGi.PostgreSQL.Create.NpgsqlConnection(ConnectionData);
             if (npgsqlConnection is null)
@@ -217,8 +222,13 @@ namespace DiGi.User.PostgreSQL.Classes
         public async Task<List<string>> InsertAsync(IEnumerable<User>? users, int batchSize = 1000, int commandTimeout = 30, CancellationToken cancellationToken = default)
         {
             // The database itself, not just the table: a connection to an absent database fails to open before any
-            // statement runs, so this is the only place a write path can bring one into existence.
-            await CreateDatabaseAsync();
+            // statement runs, so this is the only place a write path can bring one into existence. False means the
+            // connection data cannot address a server at all - a reachable server that refuses throws instead -
+            // and continuing would only move the failure to the connection open below, unnamed.
+            if (!await CreateDatabaseAsync())
+            {
+                return [];
+            }
 
             await using NpgsqlConnection? npgsqlConnection = DiGi.PostgreSQL.Create.NpgsqlConnection(ConnectionData);
             if (npgsqlConnection is null)
@@ -626,8 +636,13 @@ namespace DiGi.User.PostgreSQL.Classes
             }
 
             // The database itself, not just the table: a connection to an absent database fails to open before any
-            // statement runs, so this is the only place a write path can bring one into existence.
-            await CreateDatabaseAsync();
+            // statement runs, so this is the only place a write path can bring one into existence. False means the
+            // connection data cannot address a server at all - a reachable server that refuses throws instead -
+            // and continuing would only move the failure to the connection open below, unnamed.
+            if (!await CreateDatabaseAsync())
+            {
+                return false;
+            }
 
             await using NpgsqlConnection? npgsqlConnection = DiGi.PostgreSQL.Create.NpgsqlConnection(ConnectionData);
             if (npgsqlConnection is null)

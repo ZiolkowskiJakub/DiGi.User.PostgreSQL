@@ -56,7 +56,7 @@ The [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dot
 
 #### Returns
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
-A task that represents the asynchronous operation\. The task result is true if the table was created successfully; otherwise, false\.
+A task that represents the asynchronous operation\. The task result is true if the table was created or brought up to the current column set; false only when the connection is null\. A statement\-level failure \- permissions, an object that collides with the DDL \- propagates as an [Npgsql\.NpgsqlException](https://learn.microsoft.com/en-us/dotnet/api/npgsql.npgsqlexception 'Npgsql\.NpgsqlException') rather than returning false, so the caller reports what actually failed instead of a bare false that names nothing\.
 
 <a name='DiGi.User.PostgreSQL.Create.UserCredential(string,string)'></a>
 
