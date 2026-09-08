@@ -10,9 +10,14 @@ namespace DiGi.User.PostgreSQL
     public static partial class Create
     {
         /// <summary>
-        /// Asynchronously creates the users table in the PostgreSQL database if it does not already exist.
+        /// Asynchronously creates the users table in the PostgreSQL database if it does not already exist, and brings an
+        /// existing table up to the current column set.
         /// <para>Every statement is idempotent (<c>IF NOT EXISTS</c>), so the method is safe to run on every
         /// write and read path, mirroring the create-then-act pattern used by the converter.</para>
+        /// <para>The <c>ALTER TABLE ... ADD COLUMN IF NOT EXISTS</c> statements are the migration for databases whose users
+        /// table predates the credential and level columns: <c>CREATE TABLE IF NOT EXISTS</c> alone does nothing to a table
+        /// that already exists. A database is migrated only by a path that calls this method, which the converter's write
+        /// operations do; a read against an unmigrated database fails with <c>42703 column does not exist</c>.</para>
         /// </summary>
         /// <param name="npgsqlConnection">The <see cref="NpgsqlConnection"/> instance used to execute the command.</param>
         /// <param name="commandTimeout">The timeout in seconds for the execution of the command.</param>
@@ -34,10 +39,20 @@ namespace DiGi.User.PostgreSQL
                     first_name TEXT,
                     last_name TEXT,
                     level INTEGER DEFAULT 0,
+                    password_hash TEXT,
+                    password_salt TEXT,
+                    password_iterations INTEGER,
                     object JSONB,
                     created_at timestamptz DEFAULT now(),
                     updated_at timestamptz DEFAULT now()
                 );
+
+                -- Migration for tables created before these columns existed. CREATE TABLE IF NOT EXISTS above is a
+                -- no-op once the table exists, so a pre-existing users table gains them only here.
+                ALTER TABLE {Constants.TableName.User} ADD COLUMN IF NOT EXISTS level INTEGER DEFAULT 0;
+                ALTER TABLE {Constants.TableName.User} ADD COLUMN IF NOT EXISTS password_hash TEXT;
+                ALTER TABLE {Constants.TableName.User} ADD COLUMN IF NOT EXISTS password_salt TEXT;
+                ALTER TABLE {Constants.TableName.User} ADD COLUMN IF NOT EXISTS password_iterations INTEGER;
 
                 -- email already carries a UNIQUE index from the constraint, so it needs no second one.
                 CREATE INDEX IF NOT EXISTS idx_{Constants.TableName.User}_last_name

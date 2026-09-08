@@ -13,6 +13,7 @@ namespace DiGi.User.PostgreSQL.Classes
     // The simple name `User` otherwise resolves to the `DiGi.User` namespace (innermost-namespace shadowing,
     // Coding - General.md §1.9), so the type is bound through an alias to keep the call sites readable.
     using User = DiGi.User.Classes.User;
+    using UserCredential = DiGi.User.Classes.UserCredential;
 
     /// <summary>
     /// Provides functionality to convert and manage <see cref="User"/> entities within a PostgreSQL database,
@@ -109,7 +110,8 @@ namespace DiGi.User.PostgreSQL.Classes
         /// <summary>
         /// Asynchronously inserts or updates a collection of <see cref="User"/> entities in the database in batches.
         /// <para>Users are upserted against the unique email key, so a user that is already stored has its row
-        /// refreshed rather than duplicated.</para>
+        /// refreshed rather than duplicated. The <c>ON CONFLICT DO UPDATE</c> clause names its columns explicitly and the
+        /// credential columns are not among them, so re-inserting a user leaves an existing password credential intact.</para>
         /// </summary>
         /// <param name="npgsqlConnection">The active <see cref="NpgsqlConnection"/>.</param>
         /// <param name="users">The collection of users to insert or update.</param>
@@ -153,12 +155,13 @@ namespace DiGi.User.PostgreSQL.Classes
                     string? objectJson = user.ToJsonObject()?.ToJsonString();
 
                     NpgsqlBatchCommand batchCommand = new($@"
-                        INSERT INTO {TableName} (email, first_name, last_name, object, updated_at)
-                        VALUES (@email, @firstName, @lastName, @object, now())
+                        INSERT INTO {TableName} (email, first_name, last_name, level, object, updated_at)
+                        VALUES (@email, @firstName, @lastName, @level, @object, now())
                         ON CONFLICT (email)
                         DO UPDATE SET
                             first_name = EXCLUDED.first_name,
                             last_name = EXCLUDED.last_name,
+                            level = EXCLUDED.level,
                             object = EXCLUDED.object,
                             updated_at = now()
                         RETURNING id;");
@@ -166,6 +169,7 @@ namespace DiGi.User.PostgreSQL.Classes
                     batchCommand.Parameters.Add(new NpgsqlParameter("email", NpgsqlDbType.Text) { Value = user.Email });
                     batchCommand.Parameters.Add(new NpgsqlParameter("firstName", NpgsqlDbType.Text) { Value = (object?)user.FirstName ?? DBNull.Value });
                     batchCommand.Parameters.Add(new NpgsqlParameter("lastName", NpgsqlDbType.Text) { Value = (object?)user.LastName ?? DBNull.Value });
+                    batchCommand.Parameters.Add(new NpgsqlParameter("level", NpgsqlDbType.Integer) { Value = user.Level });
                     batchCommand.Parameters.Add(new NpgsqlParameter("object", NpgsqlDbType.Jsonb) { Value = (object?)objectJson ?? DBNull.Value });
 
                     npgsqlBatch.BatchCommands.Add(batchCommand);
@@ -187,6 +191,7 @@ namespace DiGi.User.PostgreSQL.Classes
 
         /// <summary>
         /// Asynchronously inserts or updates a collection of <see cref="User"/> entities in the database, managing the connection.
+        /// <para>Users are upserted against the unique email key, and an existing password credential is left intact.</para>
         /// </summary>
         /// <param name="users">The collection of users to insert or update.</param>
         /// <param name="batchSize">The maximum number of users per batch command.</param>
@@ -220,7 +225,7 @@ namespace DiGi.User.PostgreSQL.Classes
             }
 
             string commandText = $@"
-                SELECT email, first_name, last_name
+                SELECT email, first_name, last_name, level
                 FROM {TableName}
                 ORDER BY last_name ASC NULLS LAST, first_name ASC NULLS LAST, email ASC;";
 
@@ -264,7 +269,7 @@ namespace DiGi.User.PostgreSQL.Classes
             }
 
             string commandText = $@"
-                SELECT email, first_name, last_name
+                SELECT email, first_name, last_name, level
                 FROM {TableName}
                 WHERE email = @email
                 LIMIT 1;";
@@ -332,7 +337,7 @@ namespace DiGi.User.PostgreSQL.Classes
                 string[] emailChunk = emailList.Skip(i).Take(batchSize).ToArray();
 
                 string commandText = $@"
-                    SELECT email, first_name, last_name
+                    SELECT email, first_name, last_name, level
                     FROM {TableName}
                     WHERE email = ANY(@emails)
                     ORDER BY last_name ASC NULLS LAST, first_name ASC NULLS LAST, email ASC;";
@@ -387,7 +392,7 @@ namespace DiGi.User.PostgreSQL.Classes
             }
 
             string commandText = $@"
-                SELECT email, first_name, last_name
+                SELECT email, first_name, last_name, level
                 FROM {TableName}
                 WHERE last_name ILIKE @lastName
                 ORDER BY last_name ASC, first_name ASC NULLS LAST, email ASC;";
@@ -439,7 +444,7 @@ namespace DiGi.User.PostgreSQL.Classes
             }
 
             string commandText = $@"
-                SELECT email, first_name, last_name
+                SELECT email, first_name, last_name, level
                 FROM {TableName}
                 WHERE id = @id
                 LIMIT 1;";
@@ -469,6 +474,145 @@ namespace DiGi.User.PostgreSQL.Classes
 
             await npgsqlConnection.OpenAsync(cancellationToken);
             return await GetUserByIdAsync(npgsqlConnection, id, commandTimeout, cancellationToken);
+        }
+
+        /// <summary>
+        /// Asynchronously retrieves the stored password credential of a user by their unique email.
+        /// <para>The credential is read from its own columns rather than from the <c>object</c> payload, so it never travels
+        /// with the <see cref="User"/> returned by the other read operations.</para>
+        /// </summary>
+        /// <param name="npgsqlConnection">The active <see cref="NpgsqlConnection"/>.</param>
+        /// <param name="email">The email address of the user.</param>
+        /// <param name="commandTimeout">The timeout in seconds for the execution of the command.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="UserCredential"/> if the user exists and has a complete credential; otherwise, null.</returns>
+        public static async Task<UserCredential?> GetUserCredentialAsync(NpgsqlConnection? npgsqlConnection, string? email, int commandTimeout = 30, CancellationToken cancellationToken = default)
+        {
+            if (npgsqlConnection is null || string.IsNullOrWhiteSpace(email))
+            {
+                return null;
+            }
+
+            string commandText = $@"
+                SELECT email, password_hash, password_salt, password_iterations
+                FROM {TableName}
+                WHERE email = @email
+                LIMIT 1;";
+
+            await using NpgsqlCommand npgsqlCommand = new(commandText, npgsqlConnection);
+            npgsqlCommand.CommandTimeout = commandTimeout;
+            npgsqlCommand.Parameters.Add(new NpgsqlParameter("email", NpgsqlDbType.Text) { Value = email });
+
+            await using NpgsqlDataReader reader = await npgsqlCommand.ExecuteReaderAsync(cancellationToken);
+            if (!await reader.ReadAsync(cancellationToken))
+            {
+                return null;
+            }
+
+            // An account whose credential was never set must not be loggable, so a partially populated row reads
+            // as no credential at all rather than as one that happens to verify against nothing.
+            if (reader.IsDBNull(1) || reader.IsDBNull(2) || reader.IsDBNull(3))
+            {
+                return null;
+            }
+
+            return new UserCredential(reader.IsDBNull(0) ? null : reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetInt32(3));
+        }
+
+        /// <summary>
+        /// Asynchronously retrieves the stored password credential of a user by their unique email, managing the connection.
+        /// </summary>
+        /// <param name="email">The email address of the user.</param>
+        /// <param name="commandTimeout">The timeout in seconds for the execution of the command.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The <see cref="UserCredential"/> if the user exists and has a complete credential; otherwise, null.</returns>
+        public async Task<UserCredential?> GetUserCredentialAsync(string? email, int commandTimeout = 30, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return null;
+            }
+
+            await using NpgsqlConnection? npgsqlConnection = DiGi.PostgreSQL.Create.NpgsqlConnection(ConnectionData);
+            if (npgsqlConnection is null)
+            {
+                return null;
+            }
+
+            await npgsqlConnection.OpenAsync(cancellationToken);
+            return await GetUserCredentialAsync(npgsqlConnection, email, commandTimeout, cancellationToken);
+        }
+
+        /// <summary>
+        /// Asynchronously stores the password credential of an existing user.
+        /// <para>This updates and never inserts: the user row addressed by <see cref="UserCredential.Email"/> must already
+        /// exist, so a credential can never bring an otherwise unknown account into being.</para>
+        /// </summary>
+        /// <param name="npgsqlConnection">The active <see cref="NpgsqlConnection"/>.</param>
+        /// <param name="userCredential">The credential to store.</param>
+        /// <param name="commandTimeout">The timeout in seconds for the execution of the command.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>True if the credential was stored against an existing user; otherwise, false.</returns>
+        public static async Task<bool> SetUserCredentialAsync(NpgsqlConnection? npgsqlConnection, UserCredential? userCredential, int commandTimeout = 30, CancellationToken cancellationToken = default)
+        {
+            if (npgsqlConnection is null || userCredential is null || string.IsNullOrWhiteSpace(userCredential.Email))
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(userCredential.PasswordHash) || string.IsNullOrWhiteSpace(userCredential.PasswordSalt) || userCredential.PasswordIterations <= 0)
+            {
+                return false;
+            }
+
+            // A write path migrates the table, matching InsertAsync. The credential columns do not exist on a
+            // database whose users table predates them, and this is where they are added.
+            bool tableCreated = await CreateTableAsync(npgsqlConnection, commandTimeout, cancellationToken);
+            if (!tableCreated)
+            {
+                return false;
+            }
+
+            string commandText = $@"
+                UPDATE {TableName}
+                SET password_hash = @passwordHash,
+                    password_salt = @passwordSalt,
+                    password_iterations = @passwordIterations,
+                    updated_at = now()
+                WHERE email = @email;";
+
+            await using NpgsqlCommand npgsqlCommand = new(commandText, npgsqlConnection);
+            npgsqlCommand.CommandTimeout = commandTimeout;
+            npgsqlCommand.Parameters.Add(new NpgsqlParameter("email", NpgsqlDbType.Text) { Value = userCredential.Email });
+            npgsqlCommand.Parameters.Add(new NpgsqlParameter("passwordHash", NpgsqlDbType.Text) { Value = userCredential.PasswordHash });
+            npgsqlCommand.Parameters.Add(new NpgsqlParameter("passwordSalt", NpgsqlDbType.Text) { Value = userCredential.PasswordSalt });
+            npgsqlCommand.Parameters.Add(new NpgsqlParameter("passwordIterations", NpgsqlDbType.Integer) { Value = userCredential.PasswordIterations });
+
+            return await npgsqlCommand.ExecuteNonQueryAsync(cancellationToken) > 0;
+        }
+
+        /// <summary>
+        /// Asynchronously stores the password credential of an existing user, managing the connection.
+        /// </summary>
+        /// <param name="userCredential">The credential to store.</param>
+        /// <param name="commandTimeout">The timeout in seconds for the execution of the command.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>True if the credential was stored against an existing user; otherwise, false.</returns>
+        public async Task<bool> SetUserCredentialAsync(UserCredential? userCredential, int commandTimeout = 30, CancellationToken cancellationToken = default)
+        {
+            if (userCredential is null)
+            {
+                return false;
+            }
+
+            await using NpgsqlConnection? npgsqlConnection = DiGi.PostgreSQL.Create.NpgsqlConnection(ConnectionData);
+            if (npgsqlConnection is null)
+            {
+                return false;
+            }
+
+            await npgsqlConnection.OpenAsync(cancellationToken);
+            return await SetUserCredentialAsync(npgsqlConnection, userCredential, commandTimeout, cancellationToken);
         }
 
         /// <summary>
@@ -579,7 +723,8 @@ namespace DiGi.User.PostgreSQL.Classes
                 User user = new(reader.IsDBNull(0) ? null : reader.GetString(0))
                 {
                     FirstName = reader.IsDBNull(1) ? null : reader.GetString(1),
-                    LastName = reader.IsDBNull(2) ? null : reader.GetString(2)
+                    LastName = reader.IsDBNull(2) ? null : reader.GetString(2),
+                    Level = reader.IsDBNull(3) ? 0 : reader.GetInt32(3)
                 };
 
                 users_Result.Add(user);

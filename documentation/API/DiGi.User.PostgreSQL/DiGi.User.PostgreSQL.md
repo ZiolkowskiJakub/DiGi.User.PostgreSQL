@@ -20,10 +20,16 @@ Inheritance [System\.Object](https://learn.microsoft.com/en-us/dotnet/api/system
 
 ## Create\.TableAsync\_User\(this NpgsqlConnection, int, CancellationToken\) Method
 
-Asynchronously creates the users table in the PostgreSQL database if it does not already exist\.
+Asynchronously creates the users table in the PostgreSQL database if it does not already exist, and brings an
+existing table up to the current column set\.
 
 Every statement is idempotent (`IF NOT EXISTS`), so the method is safe to run on every
             write and read path, mirroring the create-then-act pattern used by the converter.
+
+The `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` statements are the migration for databases whose users
+            table predates the credential and level columns: `CREATE TABLE IF NOT EXISTS` alone does nothing to a table
+            that already exists. A database is migrated only by a path that calls this method, which the converter's write
+            operations do; a read against an unmigrated database fails with `42703 column does not exist`.
 
 ```csharp
 public static System.Threading.Tasks.Task<bool> TableAsync_User(this Npgsql.NpgsqlConnection? npgsqlConnection, int commandTimeout=30, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));

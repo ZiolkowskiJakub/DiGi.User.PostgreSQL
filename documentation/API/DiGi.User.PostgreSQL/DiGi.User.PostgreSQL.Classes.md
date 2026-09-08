@@ -450,6 +450,81 @@ The cancellation token\.
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 The number of stored users, or \-1 if the connection is null\.
 
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUserCredentialAsync(Npgsql.NpgsqlConnection,string,int,System.Threading.CancellationToken)'></a>
+
+## UserPostgreSQLConverter\.GetUserCredentialAsync\(NpgsqlConnection, string, int, CancellationToken\) Method
+
+Asynchronously retrieves the stored password credential of a user by their unique email\.
+
+The credential is read from its own columns rather than from the `object` payload, so it never travels
+            with the [DiGi\.User\.Classes\.User](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.user 'DiGi\.User\.Classes\.User') returned by the other read operations.
+
+```csharp
+public static System.Threading.Tasks.Task<DiGi.User.Classes.UserCredential?> GetUserCredentialAsync(Npgsql.NpgsqlConnection? npgsqlConnection, string? email, int commandTimeout=30, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
+```
+#### Parameters
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUserCredentialAsync(Npgsql.NpgsqlConnection,string,int,System.Threading.CancellationToken).npgsqlConnection'></a>
+
+`npgsqlConnection` [Npgsql\.NpgsqlConnection](https://learn.microsoft.com/en-us/dotnet/api/npgsql.npgsqlconnection 'Npgsql\.NpgsqlConnection')
+
+The active [Npgsql\.NpgsqlConnection](https://learn.microsoft.com/en-us/dotnet/api/npgsql.npgsqlconnection 'Npgsql\.NpgsqlConnection')\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUserCredentialAsync(Npgsql.NpgsqlConnection,string,int,System.Threading.CancellationToken).email'></a>
+
+`email` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The email address of the user\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUserCredentialAsync(Npgsql.NpgsqlConnection,string,int,System.Threading.CancellationToken).commandTimeout'></a>
+
+`commandTimeout` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+The timeout in seconds for the execution of the command\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUserCredentialAsync(Npgsql.NpgsqlConnection,string,int,System.Threading.CancellationToken).cancellationToken'></a>
+
+`cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
+
+The cancellation token\.
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[DiGi\.User\.Classes\.UserCredential](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.usercredential 'DiGi\.User\.Classes\.UserCredential')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+The [DiGi\.User\.Classes\.UserCredential](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.usercredential 'DiGi\.User\.Classes\.UserCredential') if the user exists and has a complete credential; otherwise, null\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUserCredentialAsync(string,int,System.Threading.CancellationToken)'></a>
+
+## UserPostgreSQLConverter\.GetUserCredentialAsync\(string, int, CancellationToken\) Method
+
+Asynchronously retrieves the stored password credential of a user by their unique email, managing the connection\.
+
+```csharp
+public System.Threading.Tasks.Task<DiGi.User.Classes.UserCredential?> GetUserCredentialAsync(string? email, int commandTimeout=30, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
+```
+#### Parameters
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUserCredentialAsync(string,int,System.Threading.CancellationToken).email'></a>
+
+`email` [System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')
+
+The email address of the user\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUserCredentialAsync(string,int,System.Threading.CancellationToken).commandTimeout'></a>
+
+`commandTimeout` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+The timeout in seconds for the execution of the command\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUserCredentialAsync(string,int,System.Threading.CancellationToken).cancellationToken'></a>
+
+`cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
+
+The cancellation token\.
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[DiGi\.User\.Classes\.UserCredential](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.usercredential 'DiGi\.User\.Classes\.UserCredential')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+The [DiGi\.User\.Classes\.UserCredential](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.usercredential 'DiGi\.User\.Classes\.UserCredential') if the user exists and has a complete credential; otherwise, null\.
+
 <a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.GetUsersAsync(int,System.Threading.CancellationToken)'></a>
 
 ## UserPostgreSQLConverter\.GetUsersAsync\(int, CancellationToken\) Method
@@ -673,7 +748,8 @@ A list of matching [DiGi\.User\.Classes\.User](https://learn.microsoft.com/en-us
 Asynchronously inserts or updates a collection of [DiGi\.User\.Classes\.User](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.user 'DiGi\.User\.Classes\.User') entities in the database in batches\.
 
 Users are upserted against the unique email key, so a user that is already stored has its row
-            refreshed rather than duplicated.
+            refreshed rather than duplicated. The `ON CONFLICT DO UPDATE` clause names its columns explicitly and the
+            credential columns are not among them, so re-inserting a user leaves an existing password credential intact.
 
 ```csharp
 public static System.Threading.Tasks.Task<System.Collections.Generic.List<string>> InsertAsync(Npgsql.NpgsqlConnection? npgsqlConnection, System.Collections.Generic.IEnumerable<DiGi.User.Classes.User>? users, int batchSize=1000, int commandTimeout=30, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
@@ -720,6 +796,8 @@ A list of user identifiers successfully inserted or updated\.
 
 Asynchronously inserts or updates a collection of [DiGi\.User\.Classes\.User](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.user 'DiGi\.User\.Classes\.User') entities in the database, managing the connection\.
 
+Users are upserted against the unique email key, and an existing password credential is left intact.
+
 ```csharp
 public System.Threading.Tasks.Task<System.Collections.Generic.List<string>> InsertAsync(System.Collections.Generic.IEnumerable<DiGi.User.Classes.User>? users, int batchSize=1000, int commandTimeout=30, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
 ```
@@ -752,6 +830,81 @@ The cancellation token\.
 #### Returns
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Collections\.Generic\.List&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[System\.String](https://learn.microsoft.com/en-us/dotnet/api/system.string 'System\.String')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.collections.generic.list-1 'System\.Collections\.Generic\.List\`1')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 A list of user identifiers successfully inserted or updated\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.SetUserCredentialAsync(DiGi.User.Classes.UserCredential,int,System.Threading.CancellationToken)'></a>
+
+## UserPostgreSQLConverter\.SetUserCredentialAsync\(UserCredential, int, CancellationToken\) Method
+
+Asynchronously stores the password credential of an existing user, managing the connection\.
+
+```csharp
+public System.Threading.Tasks.Task<bool> SetUserCredentialAsync(DiGi.User.Classes.UserCredential? userCredential, int commandTimeout=30, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
+```
+#### Parameters
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.SetUserCredentialAsync(DiGi.User.Classes.UserCredential,int,System.Threading.CancellationToken).userCredential'></a>
+
+`userCredential` [DiGi\.User\.Classes\.UserCredential](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.usercredential 'DiGi\.User\.Classes\.UserCredential')
+
+The credential to store\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.SetUserCredentialAsync(DiGi.User.Classes.UserCredential,int,System.Threading.CancellationToken).commandTimeout'></a>
+
+`commandTimeout` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+The timeout in seconds for the execution of the command\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.SetUserCredentialAsync(DiGi.User.Classes.UserCredential,int,System.Threading.CancellationToken).cancellationToken'></a>
+
+`cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
+
+The cancellation token\.
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+True if the credential was stored against an existing user; otherwise, false\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.SetUserCredentialAsync(Npgsql.NpgsqlConnection,DiGi.User.Classes.UserCredential,int,System.Threading.CancellationToken)'></a>
+
+## UserPostgreSQLConverter\.SetUserCredentialAsync\(NpgsqlConnection, UserCredential, int, CancellationToken\) Method
+
+Asynchronously stores the password credential of an existing user\.
+
+This updates and never inserts: the user row addressed by [DiGi\.User\.Classes\.UserCredential\.Email](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.usercredential.email 'DiGi\.User\.Classes\.UserCredential\.Email') must already
+            exist, so a credential can never bring an otherwise unknown account into being.
+
+```csharp
+public static System.Threading.Tasks.Task<bool> SetUserCredentialAsync(Npgsql.NpgsqlConnection? npgsqlConnection, DiGi.User.Classes.UserCredential? userCredential, int commandTimeout=30, System.Threading.CancellationToken cancellationToken=default(System.Threading.CancellationToken));
+```
+#### Parameters
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.SetUserCredentialAsync(Npgsql.NpgsqlConnection,DiGi.User.Classes.UserCredential,int,System.Threading.CancellationToken).npgsqlConnection'></a>
+
+`npgsqlConnection` [Npgsql\.NpgsqlConnection](https://learn.microsoft.com/en-us/dotnet/api/npgsql.npgsqlconnection 'Npgsql\.NpgsqlConnection')
+
+The active [Npgsql\.NpgsqlConnection](https://learn.microsoft.com/en-us/dotnet/api/npgsql.npgsqlconnection 'Npgsql\.NpgsqlConnection')\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.SetUserCredentialAsync(Npgsql.NpgsqlConnection,DiGi.User.Classes.UserCredential,int,System.Threading.CancellationToken).userCredential'></a>
+
+`userCredential` [DiGi\.User\.Classes\.UserCredential](https://learn.microsoft.com/en-us/dotnet/api/digi.user.classes.usercredential 'DiGi\.User\.Classes\.UserCredential')
+
+The credential to store\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.SetUserCredentialAsync(Npgsql.NpgsqlConnection,DiGi.User.Classes.UserCredential,int,System.Threading.CancellationToken).commandTimeout'></a>
+
+`commandTimeout` [System\.Int32](https://learn.microsoft.com/en-us/dotnet/api/system.int32 'System\.Int32')
+
+The timeout in seconds for the execution of the command\.
+
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.SetUserCredentialAsync(Npgsql.NpgsqlConnection,DiGi.User.Classes.UserCredential,int,System.Threading.CancellationToken).cancellationToken'></a>
+
+`cancellationToken` [System\.Threading\.CancellationToken](https://learn.microsoft.com/en-us/dotnet/api/system.threading.cancellationtoken 'System\.Threading\.CancellationToken')
+
+The cancellation token\.
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+True if the credential was stored against an existing user; otherwise, false\.
 
 <a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverterManager'></a>
 
