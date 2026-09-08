@@ -114,6 +114,26 @@ The cancellation token\.
 [System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
 True if the table was cleared successfully; otherwise, false\.
 
+<a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.CreateDatabaseAsync()'></a>
+
+## UserPostgreSQLConverter\.CreateDatabaseAsync\(\) Method
+
+Asynchronously creates the database this converter addresses, if it does not already exist\.
+
+Connects to the server's maintenance database rather than to the one being created, and answers true when the database is already there, so it is safe to call on every write.
+
+It has to run before anything else touches the server. A connection to an absent database does not fail on the statement - it fails to open at all, with `3D000 database does not exist`, so no write path gets far enough to create anything.
+
+The write operations call this themselves. The read operations deliberately do not: answering a question must not bring a database into existence, and a read against a server that has none has nothing to report anyway.
+
+```csharp
+public System.Threading.Tasks.Task<bool> CreateDatabaseAsync();
+```
+
+#### Returns
+[System\.Threading\.Tasks\.Task&lt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')[System\.Boolean](https://learn.microsoft.com/en-us/dotnet/api/system.boolean 'System\.Boolean')[&gt;](https://learn.microsoft.com/en-us/dotnet/api/system.threading.tasks.task-1 'System\.Threading\.Tasks\.Task\`1')  
+True if the database exists or was created; otherwise, false\.
+
 <a name='DiGi.User.PostgreSQL.Classes.UserPostgreSQLConverter.CreateTableAsync(int,System.Threading.CancellationToken)'></a>
 
 ## UserPostgreSQLConverter\.CreateTableAsync\(int, CancellationToken\) Method

@@ -55,6 +55,18 @@ namespace DiGi.User.PostgreSQL.Classes
         }
 
         /// <summary>
+        /// Asynchronously creates the database this converter addresses, if it does not already exist.
+        /// <para>Connects to the server's maintenance database rather than to the one being created, and answers true when the database is already there, so it is safe to call on every write.</para>
+        /// <para>It has to run before anything else touches the server. A connection to an absent database does not fail on the statement - it fails to open at all, with <c>3D000 database does not exist</c>, so no write path gets far enough to create anything.</para>
+        /// <para>The write operations call this themselves. The read operations deliberately do not: answering a question must not bring a database into existence, and a read against a server that has none has nothing to report anyway.</para>
+        /// </summary>
+        /// <returns>True if the database exists or was created; otherwise, false.</returns>
+        public async Task<bool> CreateDatabaseAsync()
+        {
+            return await DiGi.PostgreSQL.Create.DatabaseAsync(ConnectionData);
+        }
+
+        /// <summary>
         /// Asynchronously creates the users table in the database if it does not already exist, managing the connection.
         /// </summary>
         /// <param name="commandTimeout">The timeout in seconds for the execution of the command.</param>
@@ -62,6 +74,10 @@ namespace DiGi.User.PostgreSQL.Classes
         /// <returns>True if the table was created successfully; otherwise, false.</returns>
         public async Task<bool> CreateTableAsync(int commandTimeout = 30, CancellationToken cancellationToken = default)
         {
+            // The database itself, not just the table: a connection to an absent database fails to open before any
+            // statement runs, so this is the only place a write path can bring one into existence.
+            await CreateDatabaseAsync();
+
             await using NpgsqlConnection? npgsqlConnection = DiGi.PostgreSQL.Create.NpgsqlConnection(ConnectionData);
             if (npgsqlConnection is null)
             {
@@ -200,6 +216,10 @@ namespace DiGi.User.PostgreSQL.Classes
         /// <returns>A list of user identifiers successfully inserted or updated.</returns>
         public async Task<List<string>> InsertAsync(IEnumerable<User>? users, int batchSize = 1000, int commandTimeout = 30, CancellationToken cancellationToken = default)
         {
+            // The database itself, not just the table: a connection to an absent database fails to open before any
+            // statement runs, so this is the only place a write path can bring one into existence.
+            await CreateDatabaseAsync();
+
             await using NpgsqlConnection? npgsqlConnection = DiGi.PostgreSQL.Create.NpgsqlConnection(ConnectionData);
             if (npgsqlConnection is null)
             {
@@ -604,6 +624,10 @@ namespace DiGi.User.PostgreSQL.Classes
             {
                 return false;
             }
+
+            // The database itself, not just the table: a connection to an absent database fails to open before any
+            // statement runs, so this is the only place a write path can bring one into existence.
+            await CreateDatabaseAsync();
 
             await using NpgsqlConnection? npgsqlConnection = DiGi.PostgreSQL.Create.NpgsqlConnection(ConnectionData);
             if (npgsqlConnection is null)
