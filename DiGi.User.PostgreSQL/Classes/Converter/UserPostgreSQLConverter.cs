@@ -12,8 +12,8 @@ namespace DiGi.User.PostgreSQL.Classes
 {
     // The simple name `User` otherwise resolves to the `DiGi.User` namespace (innermost-namespace shadowing,
     // Coding - General.md §1.9), so the type is bound through an alias to keep the call sites readable.
-    using User = DiGi.User.Classes.User;
-    using UserCredential = DiGi.User.Classes.UserCredential;
+    using User = User.Classes.User;
+    using UserCredential = User.Classes.UserCredential;
 
     /// <summary>
     /// Provides functionality to convert and manage <see cref="User"/> entities within a PostgreSQL database,
