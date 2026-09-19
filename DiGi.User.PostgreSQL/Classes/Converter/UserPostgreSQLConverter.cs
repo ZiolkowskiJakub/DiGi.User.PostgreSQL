@@ -63,7 +63,7 @@ namespace DiGi.User.PostgreSQL.Classes
         /// <returns>True if the database exists or was created; otherwise, false.</returns>
         public async Task<bool> CreateDatabaseAsync()
         {
-            return await DiGi.PostgreSQL.Create.DatabaseAsync(ConnectionData);
+            return await DiGi.PostgreSQL.Create.DatabaseAsync(ConnectionData, 30);
         }
 
         /// <summary>
